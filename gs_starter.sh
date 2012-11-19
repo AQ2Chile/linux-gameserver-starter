@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ----------------------------------------------------------------
-# vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 autoindent:
 #
 # bash is needed!!
 #
@@ -25,9 +24,13 @@
 # gs_starter.cfg is part of gs_starter.sh
 #
 ##### now, hands away... #####
+if [ "${SHELL}" != "$(which bash)" ]; then
+	echo "Start this script with bash!"
+	return 0
+fi
 function loadcfg() {
     if [ -f "gs_starter.cfg" ]; then
-        . "gs_starter.cfg"
+        . "./gs_starter.cfg"
     else
         echo "The gs_starter.cfg is not there! Won't work without! Exiting"
         return 0
@@ -100,7 +103,7 @@ function find_filebits {
     fi
 
     # fallback and assume system bits
-    sb=find_sysbits
+    sb=$(find_sysbits)
     echo $sb
     return 1
 }
@@ -117,7 +120,7 @@ function find_sysbits {
 
 
 function f_realpath() {
-    RPBIN=`which realpath`
+    RPBIN=$(which realpath)
     if [ -x "${RPBIN}" ]; then
         echo $(realpath "${1}")
     else
@@ -156,12 +159,27 @@ function watcher {
     done
 }
 
+function checkinstalled {
+	if [ "$1" != "" ]; then
+		I=$(which "$1")
+		if [ -f "$I" ]; then
+			echo 1
+		else
+			echo 0
+		fi
+	fi
+}
 
 function main {
 
     loadcfg first
 
-    RPQ=$(f_realpath "$GSDED")
+		if [ "$(checkinstalled "realpath")" == "1" ]; then
+			RPQ=$(realpath "$GSDED")
+		else
+			RPQ=$GSDED
+		fi
+
     FBITS=$(find_filebits $RPQ)
     SBITS=$(find_sysbits)
     #echo fbits: $FBITS
@@ -243,3 +261,5 @@ function main {
 }
 
 main $*
+
+# vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4 autoindent:
