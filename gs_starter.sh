@@ -82,16 +82,17 @@ here-doc
 			echo "Starting '${GSDED} ${PARMS}' $s_lib"
 			screen -dm -S "${SCR}" "./$shellscript"
 			echo "on screen: ${SCR}"
-		fi
-		if [ "$RENICE" == "true" ]; then
-			if [ ! -z "${NICE[$1]}" ]; then
-				sleep 1s
-				NICE=${NICE[$1]}
-				PROCESS=$(ps -U $USER -o pid,cmd | grep -v grep | grep -i "${GSDED} ${PARMS}")
-				echo process:$PROCESS
-				PID=$(echo $PROCESS | awk {'print $1'})
-				echo pid:$PID
-				sudo renice --priority ${NICE} --pid $PID
+
+			if [ "$RENICE" == "true" ]; then
+				if [ ! -z "${NICE[$1]}" ]; then
+					sleep 1s
+					NICE=${NICE[$1]}
+					PROCESS=$(ps -U $USER -o pid,cmd | grep -v grep | grep -i "${GSDED} ${PARMS}")
+					echo process:$PROCESS
+					PID=$(echo $PROCESS | awk {'print $1'})
+					echo pid:$PID
+					sudo renice --priority ${NICE} --pid $PID
+				fi
 			fi
 		fi 
 	fi
