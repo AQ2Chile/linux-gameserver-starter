@@ -24,7 +24,7 @@
 # gs_starter.cfg is part of gs_starter.sh
 #
 ##### now, hands away... #####
-if [ "${SHELL}" != "$(which bash)" ]; then
+if [ -z "${BASH_VERSION}" ]; then
 	echo "Start this script with bash!"
 	exit
 fi
@@ -32,7 +32,7 @@ function loadcfg() {
 	if [ -f "gs_starter.cfg" ]; then
 		. "./gs_starter.cfg"
 	else
-		echo "The gs_starter.cfg is not there! Won't work without! Exiting"
+		echo "The gs_starter.cfg is not there! Won't work without! Exiting."
 		return 0
 	fi
 
@@ -68,8 +68,9 @@ cat > $shellscript <<here-doc
 #file created by gs_starter.sh - Don't edit. Your changes will be overwritten!
 while true; do
   echo
-  echo "Starting '${GSDED} ${PARMS}' $s_lib"
+  echo "Starting '${GSDED} ${PARMS}' $s_lib in ${GSPATH}"
   echo
+  cd ${GSPATH}
   LD_LIBRARY_PATH=${s_lib} ./${GSDED} ${PARMS}
   echo
   echo "----sleep---- ctrl+c to hit the break :-)"
@@ -82,6 +83,17 @@ here-doc
 			screen -dm -S "${SCR}" "./$shellscript"
 			echo "on screen: ${SCR}"
 		fi
+		if [ "$RENICE" == "true" ]; then
+			if [ ! -z "${NICE[$1]}" ]; then
+				sleep 1s
+				NICE=${NICE[$1]}
+				PROCESS=$(ps -U $USER -o pid,cmd | grep -v grep | grep -i "${GSDED} ${PARMS}")
+				echo process:$PROCESS
+				PID=$(echo $PROCESS | awk {'print $1'})
+				echo pid:$PID
+				sudo renice --priority ${NICE} --pid $PID
+			fi
+		fi 
 	fi
 }
 
@@ -133,12 +145,11 @@ function control_c {
 }
 
 function watcher {
-	echo "Watcher begins..."
 	# trap keyboard interrupt (control-c)
 	trap control_c SIGINT
-	echo "watcher runs" > "gs_starter.run"
+	echo "$$ $(date) watcher runs" > "gs_starter.run"
 
-	echo "Lets keep those activated: ${SCREEN[*]}"
+	echo "Night gathers, and now my watch begins. Lets keep those activated: ${SCREEN[*]}"
 	# start them..
 	while [ -f "gs_starter.run" ]; do
 
@@ -210,7 +221,7 @@ function main {
 		fi
 	elif [ "$1" == "stopwatch" ]; then
 		rm "gs_starter.run"
-		echo "The gs_starter watcher should be stopped now."
+		echo "And now his watch is ended. The gs_starter watcher should be stopped now."
 		return 1
 
 	elif [ "$1" == "stopall" ]; then
